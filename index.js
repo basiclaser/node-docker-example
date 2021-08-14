@@ -1,14 +1,45 @@
-const http = require('http'); // Loads the http module 
+const express = require('express');
+const nodemailer = require('nodemailer');
+const app = express();
+const port = process.env.PORT || 8080;
+require("dotenv").config();
 
-const server = http.createServer((request, response) => {
-    console.log("request received")
-    // 1. Tell the browser everything is OK (Status code 200), and the data is in plain text
-    response.writeHead(200, {
-        'Content-Type': 'text/plain'
-    });
-    // 2. Write the announced text to the body of the page
-    response.write('Hello, World!\n');
-    // 3. Tell the server that all of the response headers and body have been sent
-    response.end();
+var transporter = nodemailer.createTransport({
+    host: 'krieger.asoshared.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.mail,
+      pass: process.env.password
+    }
+});
+  
+app.get('/', function(req, res) { 
+    res.send('Hello World!');
 })
-server.listen(8080); // 4. Tells the server what port to be on
+
+app.get('/email-test', function(req, res) { 
+    try {
+        var mailOptions = {
+            from: 'dont@forgetmy.email',
+            to: 'dont@forgetmy.email',
+            subject: 'Sending Email using Node.js',
+            text: 'That was easy!'
+          };
+        transporter.sendMail(mailOptions, function(error, info){
+            if (error) {
+                console.log(error);
+                res.status(500)
+                res.send({ error: error })
+            } else {
+                console.log('Email sent: ' + info.response);
+                res.send('email sent');
+            }
+        });
+    } catch(e) {
+        console.log(e);
+        res.status(500)
+        res.send({ error: e })
+    }
+})
+app.listen(port);
